@@ -1,49 +1,53 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 const { ObjectId } = mongoose.Schema.Types;
-const PostModel = new mongoose.Schema({
-    images: [{
+const PostModel = new mongoose.Schema(
+  {
+    images: [
+      {
         type: String,
-    }],
+      },
+    ],
     points: {
-        type: Array,
-        default: []
+      type: Array,
+      default: [],
     },
     postedBy: {
-        type: ObjectId,
-        ref: "user"
+      type: ObjectId,
+      ref: "user",
     },
     country: {
-        type: String
+      type: String,
     },
     city: {
-        type: String
+      type: String,
     },
     lat: {
-        type: String
+      type: String,
     },
     lon: {
-        type: String
+      type: String,
     },
     description: {
-        type: String
+      type: String,
     },
     any_other: {
-        type: String
+      type: String,
     },
     address: {
-        type: String
+      type: String,
     },
     fooditems: [
-        {
-            item_name: String,
-            availability: String,
-            remained: String,
-            spoil_in_hrs: String
-        }
-    ]
+      {
+        item_name: String,
+        availability: String,
+        remained: String,
+        spoil_in_hrs: String,
+      },
+    ],
+  },
+  {
+    timestamps: true,
+  }
+);
 
-}, {
-    timestamps: true
-})
-
-module.exports = mongoose.model('post', PostModel);
+module.exports = mongoose.model("post", PostModel);
