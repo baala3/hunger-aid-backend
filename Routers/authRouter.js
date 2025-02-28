@@ -5,87 +5,79 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const auth = require("../middlewares/auth");
 
-//register router
 router.post("/register", async (req, res) => {
-  //dummy data
-  // req.body = {
-  //     ...req.body,
-  //     password: "bala",
-  //     email: "bala",
-  //     name: "bala"
-  // }
-
   try {
-    console.log(req.body);
-    //hash password
-    const salt = await bcrypt.genSalt(10);
-    const hashedpassword = await bcrypt.hash(req.body.password, salt);
+    const { name, email, password } = req.body;
 
     //check for user existance
-    const alreadyuser = await UserModel.findOne({ email: req.body.email });
-    if (alreadyuser)
-      return res.status(500).json("user already there,just login");
+    const alreadyuser = await UserModel.findOne({ email });
+    if (alreadyuser) {
+      return res.status(500).json("user already exists.");
+    }
+
+    //hash password
+    const salt = await bcrypt.genSalt(10);
+    const hashedpassword = await bcrypt.hash(password, salt);
 
     //save model
-    const user = await new UserModel({
-      name: req.body.name,
-      email: req.body.email,
+    const user = await UserModel.create({
+      name,
+      email,
       password: hashedpassword,
     });
-
-    //save user
-    await user.save();
 
     //jwt
     const token = await jwt.sign(
       { userid: user._id },
       process.env.JWT_SCERET_KEY
     );
-    res.status(200).json({ token, user });
+
+    res.status(201).json({ token, user });
   } catch (err) {
-    console.log(err);
+    console.log("Registration failed", err);
     res.status(500).send(err.message);
   }
 });
 
 router.post("/login", async (req, res) => {
   try {
-    // //dummy data
-    // req.body = {
-    //     ...req.body,
-    //     password: "bala",
-    //     email: "bala"
-    // }
+    const { email, password } = req.body;
 
-    //find if user doesnt exits
-    const alreadyUser = await UserModel.findOne({ email: req.body.email });
-    if (!alreadyUser) res.status(403).json("Plse sigup first");
+    //find if user doesn't exits
+    const user = await UserModel.findOne({ email });
+    if (!user) {
+      return res.status(403).json("Please signup first");
+    }
 
     //check for password
-    const isCorrectPassword = await bcrypt.compare(
-      req.body.password,
-      alreadyUser.password
-    );
-    if (!isCorrectPassword) res.status(400).json("wrong password");
+    const isCorrectPassword = await bcrypt.compare(password, user.password);
+
+    if (!isCorrectPassword) {
+      return res.status(400).json("wrong password");
+    }
 
     //generate token
     const token = await jwt.sign(
-      { userid: alreadyUser._id },
+      { userid: user._id },
       process.env.JWT_SCERET_KEY
     );
 
-    res.status(200).send({ token, alreadyUser });
+    res.status(200).send({ token, user });
   } catch (err) {
+    console.log("Login failed", err);
     res.status(500).send(err.message);
   }
 });
 
 router.get("/getuser", auth, async (req, res) => {
   try {
-    const user = await UserModel.findById(req.auth.userid);
+    const user = await UserModel.findById(req.auth.userid).select("-password");
 
-    if (!user) res.status(403).json("No user found");
-    else res.status(200).json(user);
+    if (!user) {
+      return res.status(403).json("No user found");
+    }
+
+    res.status(200).json(user);
   } catch (err) {
     res.status(500).send(err.message);
   }
@@ -105,20 +97,31 @@ router.put("/update_user", auth, async (req, res) => {
   }
 });
 
-// router.post('/upvote', auth, async (req, res) => {
-//     //console.log(req.body.userID);
-//     try {
-//         const updateUser = await UserModel.findById(req.body.userID);
-//         if (updateUser.points.includes(req.auth.userid)) {
-//             const downvote = await UserModel.findByIdAndUpdate(req.body.userID, { $pull: { points: req.auth.userid } }, { new: true });
-//             return res.status(200).json("down voted");
-//         }
-//         const downvote = await UserModel.findByIdAndUpdate(req.body.userID, { $push: { points: req.auth.userid } }, { new: true });
-//         return res.status(200).json("up voted");
-//     } catch (e) {
-//         console.log(e);
-//         res.status(500).json("error occured at upvote");
-//     }
-// })
+router.post("/upvote", auth, async (req, res) => {
+  try {
+    const { userID } = req.body;
+    const voterID = req.auth.userid;
+
+    const user = await UserModel.findById(userID);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const hasVoted = user.points.includes(voterID);
+    const operation = hasVoted
+      ? { $pull: { points: voterID } }
+      : { $push: { points: voterID } };
+
+    await UserModel.findByIdAndUpdate(userID, operation, { new: true });
+
+    return res.status(200).json({
+      message: hasVoted ? "Downvoted successfully" : "Upvoted successfully",
+    });
+  } catch (error) {
+    console.error("Upvote error:", error);
+    res.status(500).json({ message: "Error occurred while voting" });
+  }
+});
 
 module.exports = router;

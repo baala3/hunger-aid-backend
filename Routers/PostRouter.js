@@ -4,149 +4,134 @@ const PostModel = require("../Models/PostModel");
 const auth = require("../middlewares/auth");
 const nodemailer = require("nodemailer");
 
-//dummy image for post
-const url = "https://cloud.mongodb.com/static/images/data-explorer-empty.svg";
-
 router.post("/addpost", auth, async (req, res) => {
   try {
-    //dummy data
-    req.body = {
-      images: [url, url],
-      postedBy: "60ef9ca5f444c43690513ef2",
-      lat: "11",
-      lon: "12",
-      country: "country",
-      city: "city",
-      locality: "locality",
-      spot: "spot",
-      availability: "availability",
-      remained: "remained",
-      expires: "exp",
+    const post = new PostModel({
       ...req.body,
-    };
+      postedBy: req.auth.userid,
+    });
 
-    //save post to database
-    const addpost = await new PostModel(req.body);
-    await addpost.save().then((t) => t.populate("postedBy").execPopulate());
+    const savedPost = await post.save();
+    await savedPost.populate("postedBy", "-password");
 
-    res.status(200).json(addpost);
+    res.status(200).json(savedPost);
   } catch (err) {
+    console.log("Error adding post", err);
     res.status(500).json(err.message);
   }
 });
 
 router.get("/allposts", async (req, res) => {
   try {
-    //geting posts fron db
     const allPosts = await PostModel.find()
-      .populate("postedBy")
-      .sort("-createdAt");
+      .populate("postedBy", "-password") // Exclude password from populated user
+      .sort("-createdAt")
+      .select("-__v"); // Exclude version key
     res.status(200).json(allPosts);
   } catch (err) {
+    console.log("Error fetching posts", err);
     res.status(500).json(err.message);
   }
 });
 
 router.get("/:id", async (req, res) => {
   try {
-    //getting posts by id
-    const allPosts = await PostModel.findOne({ _id: req.params.id });
-    if (allPosts) res.status(200).json(allPosts);
-    else res.status(403).json("no posts found");
+    const post = await PostModel.findById(req.params.id)
+      .populate("postedBy", "-password")
+      .select("-__v");
+
+    if (!post) {
+      return res.status(404).json("no posts found");
+    }
+
+    res.status(200).json(post);
   } catch (err) {
+    console.error("Get post by ID error:", err);
     res.status(500).json(err.message);
   }
 });
 
 router.put("/:id", async (req, res) => {
-  //dummy data
-  req.body = {
-    images: [url, url, url, url],
-    postedBy: "60ef9ca5f444c43690513ef2",
-    lat: "11",
-    lon: "12",
-    country: "country",
-    city: "city",
-    locality: "locality",
-    spot: "spot",
-    availability: "availability",
-    remained: "remained",
-    expires: new Date(),
-    ...req.body,
-  };
   try {
-    //find post and update
-
-    const allPosts = await PostModel.findByIdAndUpdate(
+    const updatedPost = await PostModel.findByIdAndUpdate(
       req.params.id,
       req.body,
-      { new: true }
-    ).then((t) => t.populate("postedBy").execPopulate());
+      {
+        new: true,
+        runValidators: true,
+      }
+    ).populate("postedBy", "-password");
 
-    if (allPosts) res.status(200).json(allPosts);
-    else res.status(403).json("no posts found");
+    if (!updatedPost) {
+      return res.status(404).json("no posts found");
+    }
+
+    res.status(200).json(updatedPost);
   } catch (err) {
+    console.error("Update post error:", err);
     res.status(500).json(err.message);
   }
 });
 
 router.delete("/:id", auth, async (req, res) => {
   try {
-    //find post and delete
     const deletedPost = await PostModel.findByIdAndDelete(req.params.id);
+
+    if (!deletedPost) {
+      return res.status(404).json("Post not found");
+    }
+
     res.status(200).json(deletedPost);
   } catch (err) {
+    console.error("Delete post error:", err);
     res.status(500).json(err.message);
   }
 });
 
-router.post("/upvote", auth, async (req, res) => {
+router.post("/switchvote", auth, async (req, res) => {
   try {
-    const updatedPost = await PostModel.findById(req.body.id);
-    console.log(updatedPost);
-    if (updatedPost.points.includes(req.auth.userid)) {
-      const downvote = await PostModel.findByIdAndUpdate(
-        req.body.id,
-        { $pull: { points: req.auth.userid } },
-        { new: true }
-      );
-      return res.status(200).json("down voted");
-    } else {
-      const upvote = await PostModel.findByIdAndUpdate(
-        req.body.id,
-        { $push: { points: req.auth.userid } },
-        { new: true }
-      );
-      return res.status(200).json("up voted");
+    const post = await PostModel.findById(req.body.id);
+
+    if (!post) {
+      return res.status(404).json("Post not found");
     }
+
+    const hasVoted = post.points.includes(req.auth.userid);
+    const operation = hasVoted
+      ? { $pull: { points: req.auth.userid } }
+      : { $push: { points: req.auth.userid } };
+
+    await PostModel.findByIdAndUpdate(req.body.id, operation, { new: true });
+
+    return res.status(200).json(hasVoted ? "down voted" : "up voted");
   } catch (err) {
+    console.error("Upvote error:", err);
     res.status(500).json(err.message);
   }
 });
 
 router.post("/mail", async (req, res) => {
-  const frommail = req.body.frommail;
-  const password = req.body.password;
-  const tomail = req.body.tomail;
-  var transporter = nodemailer.createTransport({
-    service: "gmail",
+  const { frommail, password, tomail, Subject, Body } = req.body;
 
+  const transporter = nodemailer.createTransport({
+    service: "gmail",
     auth: {
       user: frommail,
       pass: password,
     },
   });
 
-  var mailOptions = {
+  const mailOptions = {
     from: frommail,
     to: tomail,
     subject: "Food Management",
-    text: req.body.Subject,
-    html: req.body.Body,
+    text: Subject,
+    html: Body,
   };
 
-  transporter.sendMail(mailOptions, function (error, info) {
+  transporter.sendMail(mailOptions, (error, info) => {
     if (error) {
+      console.error("Email error:", error);
       res.json({
         msg: "fail",
       });
