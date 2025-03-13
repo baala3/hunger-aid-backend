@@ -3,3 +3,6 @@
 /.pnp
 /Client
 .pnp.js
+
+# env
+.env
