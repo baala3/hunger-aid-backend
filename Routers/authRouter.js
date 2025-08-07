@@ -4,8 +4,11 @@ const UserModel = require("../Models/UserModel");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const auth = require("../middlewares/auth");
+const multer = require("multer");
 
-router.post("/register", async (req, res) => {
+const upload = multer();
+
+router.post("/register", upload.none(), async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
@@ -39,7 +42,7 @@ router.post("/register", async (req, res) => {
   }
 });
 
-router.post("/login", async (req, res) => {
+router.post("/login", upload.none(), async (req, res) => {
   try {
     const { email, password } = req.body;
 
@@ -83,7 +86,7 @@ router.get("/getuser", auth, async (req, res) => {
   }
 });
 
-router.put("/update_user", auth, async (req, res) => {
+router.put("/update_user", auth, upload.none(), async (req, res) => {
   try {
     const updateUser = await UserModel.findByIdAndUpdate(
       req.auth.userid,
@@ -97,7 +100,7 @@ router.put("/update_user", auth, async (req, res) => {
   }
 });
 
-router.post("/upvote", auth, async (req, res) => {
+router.post("/upvote", auth, upload.none(), async (req, res) => {
   try {
     const { userID } = req.body;
     const voterID = req.auth.userid;

@@ -3,8 +3,11 @@ const router = express.Router();
 const PostModel = require("../Models/PostModel");
 const auth = require("../middlewares/auth");
 const nodemailer = require("nodemailer");
+const multer = require("multer");
 
-router.post("/addpost", auth, async (req, res) => {
+const upload = multer();
+
+router.post("/addpost", auth, upload.none(), async (req, res) => {
   try {
     const post = new PostModel({
       ...req.body,
@@ -51,7 +54,7 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-router.put("/:id", async (req, res) => {
+router.put("/:id", upload.none(), async (req, res) => {
   try {
     const updatedPost = await PostModel.findByIdAndUpdate(
       req.params.id,
@@ -88,7 +91,7 @@ router.delete("/:id", auth, async (req, res) => {
   }
 });
 
-router.post("/switchvote", auth, async (req, res) => {
+router.post("/switchvote", auth, upload.none(), async (req, res) => {
   try {
     const post = await PostModel.findById(req.body.id);
 
@@ -110,7 +113,7 @@ router.post("/switchvote", auth, async (req, res) => {
   }
 });
 
-router.post("/mail", async (req, res) => {
+router.post("/mail", upload.none(), async (req, res) => {
   const { frommail, password, tomail, Subject, Body } = req.body;
 
   const transporter = nodemailer.createTransport({
