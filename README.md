@@ -46,3 +46,4 @@ This project helps connect food donors with charities to reduce food waste and s
 ## Hosted on Netlify
 
 have a look [live url](https://hunger-aid.netlify.app/)
+and frontend repo [here](https://github.com/baala3/hunger-aid-frontend)
