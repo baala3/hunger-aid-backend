@@ -100,31 +100,4 @@ router.put("/update_user", auth, upload.none(), async (req, res) => {
   }
 });
 
-router.post("/upvote", auth, upload.none(), async (req, res) => {
-  try {
-    const { userID } = req.body;
-    const voterID = req.auth.userid;
-
-    const user = await UserModel.findById(userID);
-
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    const hasVoted = user.points.includes(voterID);
-    const operation = hasVoted
-      ? { $pull: { points: voterID } }
-      : { $push: { points: voterID } };
-
-    await UserModel.findByIdAndUpdate(userID, operation, { new: true });
-
-    return res.status(200).json({
-      message: hasVoted ? "Downvoted successfully" : "Upvoted successfully",
-    });
-  } catch (error) {
-    console.error("Upvote error:", error);
-    res.status(500).json({ message: "Error occurred while voting" });
-  }
-});
-
 module.exports = router;
