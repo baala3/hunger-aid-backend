@@ -21,29 +21,58 @@ This project helps connect food donors with charities to reduce food waste and s
 ## Features List
 
 1. **User Sign-Up:** A sign-up form allows new users to create an account. User records are stored in MongoDB. Existing users are prevented from signing up again.
-2. **Login Page:** Enables authorized users to log in. Validates username and password matches and supports role-based login (Business or Charity), redirecting users to their respective home pages.
-3. **Business Home Page:** Provides a widget for businesses to upload images of leftover food and input details like the amount of food cooked and wasted. Food images are uploaded to Cloudinary.
+2. **Login Page:** Enables authorized users to log in. Validates username and password matches and redirecting users to home pages.
+3. **Dashboard Page:** Provides a widget for users to upload images of leftover food and input details like the amount of food cooked and wasted. Food images are uploaded to Cloudinary.
 4. **Food Location Tracking:** Users can trace food locations and get directions from their current location using integrated maps.
 5. **Profile Management:** Users can update their profiles with relevant information.
 6. **Upvote System:** Users can upvote posts if they find the information helpful.
 7. **Support System:** Users can contact the support team for assistance with any issues they encounter.
 
 ## Tech Stack used:
+**Backend & Runtime**
+- **Node.js** – JavaScript runtime
+- **Express.js** – Web framework for Node.js
 
-1. MongoDB, (Mongoose)
-2. Node.js
-3. React
-4. Express
-5. Material-UI
-6. Mapbox-gl
-7. ftp-mail
-8. JWT (Authentication)
-9. Redux, (React-Redux)
-10. React-swipeable-views
+**Database**
 
-<!-- fix later -->
+- **MongoDB** – NoSQL database
+- **Mongoose** – ODM for MongoDB
 
-## Hosted on Netlify
+**Auth & Security**
 
-have a look [live url](https://hunger-aid.netlify.app/)
-and frontend repo [here](https://github.com/baala3/hunger-aid-frontend)
+- **bcrypt** – Password hashing
+- **jsonwebtoken** – JWT authentication
+
+**File Handling**
+
+- **multer** – Middleware for handling multipart/form-data
+
+**Email**
+
+- **nodemailer** – Send emails from Node.js
+
+**Environment & Middleware**
+
+- **dotenv** – Environment config
+- **cors** – Enable CORS
+
+**Dev Tools**
+
+- **nodemon** – Auto-restart on changes
+- **concurrently** – Run multiple scripts
+
+**Deployment**
+
+- **Vercel** – Hosting platform
+- **@vercel/node** – Node.js runtime for Vercel
+
+**Architecture**
+
+- **MVC Pattern** – Models, Routes, Middleware
+- **REST API** – Auth & Post endpoints
+
+## Hosting
+Netlify is used to host this project, live goes [here](https://hunger-aid.netlify.app/)
+
+#### others
+frontend repo is [here](https://github.com/baala3/hunger-aid-frontend)
