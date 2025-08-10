@@ -71,9 +71,8 @@ This project helps connect food donors with charities to reduce food waste and s
 - **MVC Pattern** – Models, Routes, Middleware
 - **REST API** – Auth & Post endpoints
 
-## Hosting
-Netlify is used to host this project, live goes [here](https://hunger-aid.netlify.app/)
-
-#### others
-- frontend repo is [here](https://github.com/baala3/hunger-aid-frontend)
-- env variables (JWT_SCERET_KEY and MONGOURL) are injected via vercel 
+## Links
+- frontend live https://hunger-aid.netlify.app/
+- backend api endpoints - https://hunger-aid-backend.vercel.app
+   - env variables (JWT_SCERET_KEY and MONGOURL) are injected via vercel 
+- frontend repo https://github.com/baala3/hunger-aid-frontend
