@@ -75,4 +75,5 @@ This project helps connect food donors with charities to reduce food waste and s
 Netlify is used to host this project, live goes [here](https://hunger-aid.netlify.app/)
 
 #### others
-frontend repo is [here](https://github.com/baala3/hunger-aid-frontend)
+- frontend repo is [here](https://github.com/baala3/hunger-aid-frontend)
+- env variables (JWT_SCERET_KEY and MONGOURL) are injected via vercel 
